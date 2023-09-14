@@ -1,0 +1,9 @@
+rootProject.name = 'ttlearn'
+
+include 'services:api-gateway'
+include 'services:discovery-server'
+include 'services:course-service'
+include 'services:user-management'
+include 'services:tenant-service'
+include 'services:content-management'
+include 'services:common'
