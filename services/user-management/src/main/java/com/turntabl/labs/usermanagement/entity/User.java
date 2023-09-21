@@ -31,17 +31,18 @@ public class User {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_profile_id", referencedColumnName = "id")
-    private UserProfile userProfile;
+    private  UserProfile userProfile;
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_role_id", referencedColumnName = "id")
-    private UserRole userRole;
+    private  UserRole userRole;
 
 
     @Column(name = "tenant_id", nullable = false)
     private long tenantId;
 
     @OneToOne(mappedBy = "user")
-    private PasswordResetCode passwordResetCode;
+    private  PasswordResetCode passwordResetCode;
+
 
 }

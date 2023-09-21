@@ -25,6 +25,7 @@ public interface EntityMapper {
     @Mapping(target = "email", expression = "java(user.getUserProfile().getEmail())")
     @Mapping(target = "role", expression = "java(user.getUserRole().getRoleName().name())")
     @Mapping(target = "tenantId", source = "tenantId")
+//    @Mapping(target= "grantedAuthorities", expression = "java(user.getUserProfile().getAuthorities())")
     UserDto convertToUserDto(User user);
 
 

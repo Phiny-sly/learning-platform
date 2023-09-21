@@ -1,6 +1,7 @@
 package com.turntabl.labs.usermanagement.controller;
 
 import com.turntabl.labs.usermanagement.dto.UserDto;
+import com.turntabl.labs.usermanagement.payload.LoginPayload;
 import com.turntabl.labs.usermanagement.payload.UserPayload;
 import com.turntabl.labs.usermanagement.payload.UserProfilePayload;
 import com.turntabl.labs.usermanagement.payload.UserRolePayload;
@@ -8,6 +9,7 @@ import com.turntabl.labs.usermanagement.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +24,12 @@ public class UserController {
         return new ResponseEntity<>(userService.createUser(userPayload), HttpStatus.CREATED);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<String> loginUser(@RequestBody LoginPayload loginPayload) {
+        return new ResponseEntity<>(userService.generateToken(loginPayload), HttpStatus.ACCEPTED);
+
+    }
+
     @GetMapping("/details/{id}")
     public ResponseEntity<UserDto> getUserDetails(@PathVariable("id") long userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
@@ -33,6 +41,7 @@ public class UserController {
     }
 
     @PutMapping("/role-change")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UserDto> updateUserRole(@RequestBody UserRolePayload userRolePayload) {
         return new ResponseEntity<>(userService.updateUserRole(userRolePayload), HttpStatus.ACCEPTED);
     }
