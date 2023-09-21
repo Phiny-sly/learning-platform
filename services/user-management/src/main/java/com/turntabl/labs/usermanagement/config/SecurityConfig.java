@@ -40,16 +40,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    @SuppressWarnings("deprecated")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf()
-                .disable()
-                .authorizeHttpRequests()
-                .requestMatchers("/api/users/create").permitAll()
-                .anyRequest().authenticated()
-                .and().sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
+        return http.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(r -> r.requestMatchers("/api/users/create").permitAll()
+                        .anyRequest().authenticated()).sessionManagement(a -> a.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
