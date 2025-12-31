@@ -3,11 +3,12 @@ package com.turntabl.labs.usermanagement.dto;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Set;
 
 @Data
 public class UserDto {
+    private Long id;
     private String firstName;
     private String lastName;
     private String email;
@@ -15,6 +16,7 @@ public class UserDto {
     private String avatarUrl;
     private String role;
     private long tenantId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Collection<? extends GrantedAuthority> grantedAuthorities;
-
 }

@@ -35,6 +35,18 @@ public class Multimedia {
     @UpdateTimestamp
     private String updatedAt;
 
+    @Column(name = "course_id")
+    private String courseId;
+
+    @Column(name = "lesson_id")
+    private String lessonId;
+
+    @Column(name = "order_index")
+    private Integer orderIndex;
+
+    @Column(name = "description", length = 2000)
+    private String description;
+
     public Multimedia(String title, MediaType mediaType, String url) {
         this.title = title;
         this.mediaType = mediaType;

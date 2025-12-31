@@ -61,28 +61,34 @@ public class UserProfile implements UserDetails {
         return Collections.singleton(new SimpleGrantedAuthority(getUser().getUserRole().getRoleName().name()));
     }
 
+    @Column(name = "is_enabled", nullable = false)
+    private Boolean isEnabled = true;
+
+    @Column(name = "is_account_non_locked", nullable = false)
+    private Boolean isAccountNonLocked = true;
+
     @Override
     public String getUsername() {
-        return null;
+        return this.email;
     }
 
     @Override
     public boolean isAccountNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return false;
+        return isAccountNonLocked != null && isAccountNonLocked;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return false;
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return false;
+        return isEnabled != null && isEnabled;
     }
 }

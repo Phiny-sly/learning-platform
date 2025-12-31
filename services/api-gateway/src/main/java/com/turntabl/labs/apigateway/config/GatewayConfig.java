@@ -35,6 +35,12 @@ public class GatewayConfig {
                         ).route("content-management", r -> r
                                 .path("/api/multimedia/**")
                                 .uri("lb://content-management"))
+                        .route("notification-service", r -> r
+                                .path("/api/notifications/**")
+                                .uri("lb://notification-service"))
+                        .route("progress-service", r -> r
+                                .path("/api/progress/**")
+                                .uri("lb://progress-service"))
                         .build();
     }
 

@@ -2,18 +2,23 @@ package com.turntabl.labs.usermanagement.controller;
 
 import com.turntabl.labs.usermanagement.dto.UserDto;
 import com.turntabl.labs.usermanagement.payload.LoginPayload;
+import com.turntabl.labs.usermanagement.payload.PasswordResetPayload;
+import com.turntabl.labs.usermanagement.payload.PasswordResetRequestPayload;
 import com.turntabl.labs.usermanagement.payload.UserPayload;
 import com.turntabl.labs.usermanagement.payload.UserProfilePayload;
 import com.turntabl.labs.usermanagement.payload.UserRolePayload;
 import com.turntabl.labs.usermanagement.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequestMapping("/api/users")
 public class UserController {
     @Autowired
@@ -27,12 +32,25 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<String> loginUser(@RequestBody LoginPayload loginPayload) {
         return new ResponseEntity<>(userService.generateToken(loginPayload), HttpStatus.ACCEPTED);
-
     }
 
     @GetMapping("/details/{id}")
     public ResponseEntity<UserDto> getUserDetails(@PathVariable("id") long userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Page<UserDto>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id,asc") String[] sort) {
+        Sort sortObj = Sort.by(sort[0].split(",")[0]);
+        if (sort[0].split(",").length > 1 && sort[0].split(",")[1].equalsIgnoreCase("desc")) {
+            sortObj = sortObj.descending();
+        }
+        Pageable pageable = PageRequest.of(page, size, sortObj);
+        return ResponseEntity.ok(userService.getAllUsers(pageable));
     }
 
     @PutMapping("/details-change/{id}")
@@ -46,4 +64,22 @@ public class UserController {
         return new ResponseEntity<>(userService.updateUserRole(userRolePayload), HttpStatus.ACCEPTED);
     }
 
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Void> requestPasswordReset(@RequestBody PasswordResetRequestPayload payload) {
+        userService.requestPasswordReset(payload);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/password-reset")
+    public ResponseEntity<Void> resetPassword(@RequestBody PasswordResetPayload payload) {
+        userService.resetPassword(payload);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") long userId) {
+        userService.deleteUser(userId);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

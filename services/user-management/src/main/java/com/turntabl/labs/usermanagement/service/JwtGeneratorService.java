@@ -3,7 +3,6 @@ package com.turntabl.labs.usermanagement.service;
 import com.turntabl.labs.usermanagement.dto.UserDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,14 +25,13 @@ public class JwtGeneratorService {
         return createToken(claims, email);
     }
 
-    @SuppressWarnings("deprecated")
     private String createToken(Map<String, Object> claims, String email) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(email)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 86400))
-                .signWith(SignatureAlgorithm.HS256, getSignKey()).compact();
+                .signWith(getSignKey()).compact();
     }
 
     private Key getSignKey() {
