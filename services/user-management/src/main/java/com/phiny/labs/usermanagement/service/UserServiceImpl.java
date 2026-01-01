@@ -1,8 +1,10 @@
 package com.phiny.labs.usermanagement.service;
 
 import com.phiny.labs.usermanagement.config.EntityMapper;
+import com.phiny.labs.usermanagement.dto.TokenResponse;
 import com.phiny.labs.usermanagement.dto.UserDto;
 import com.phiny.labs.usermanagement.entity.PasswordResetCode;
+import com.phiny.labs.usermanagement.entity.RefreshToken;
 import com.phiny.labs.usermanagement.entity.User;
 import com.phiny.labs.usermanagement.entity.UserProfile;
 import com.phiny.labs.usermanagement.exception.EmailAlreadyExistsException;
@@ -18,6 +20,7 @@ import com.phiny.labs.usermanagement.repository.PasswordResetCodeRepository;
 import com.phiny.labs.usermanagement.repository.UserProfileRepository;
 import com.phiny.labs.usermanagement.repository.UserRepository;
 import com.phiny.labs.usermanagement.repository.UserRoleRepository;
+import com.phiny.labs.usermanagement.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -58,6 +61,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private AuthenticationManager authenticationManager;
     @Autowired
     private PasswordResetCodeRepository passwordResetCodeRepository;
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
     @Override
     public UserDto createUser(UserPayload userPayload) {
@@ -128,9 +133,51 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public String generateToken(LoginPayload payload) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(payload.getEmail(), payload.getPassword()));
         if (authentication.isAuthenticated()) {
-            return jwtGeneratorService.generateToken(payload.getEmail());
+            UserDto user = getUserByEmail(payload.getEmail());
+            String role = user.getRole() != null ? user.getRole() : "STUDENT";
+            Long userId = user.getId();
+            Long tenantId = user.getTenantId();
+            return jwtGeneratorService.generateToken(payload.getEmail(), role, userId, tenantId);
         }
         throw new UserNotFoundException();
+    }
+
+    @Override
+    public TokenResponse login(LoginPayload payload) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(payload.getEmail(), payload.getPassword()));
+        if (authentication.isAuthenticated()) {
+            UserDto user = getUserByEmail(payload.getEmail());
+            String role = user.getRole() != null ? user.getRole() : "STUDENT";
+            Long userId = user.getId();
+            Long tenantId = user.getTenantId();
+            
+            String accessToken = jwtGeneratorService.generateToken(payload.getEmail(), role, userId, tenantId);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userId);
+            
+            return new TokenResponse(accessToken, refreshToken.getToken(), "Bearer", 86400L);
+        }
+        throw new UserNotFoundException();
+    }
+
+    @Override
+    @Transactional
+    public TokenResponse refreshToken(String refreshTokenString) {
+        RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenString)
+                .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+        
+        refreshToken = refreshTokenService.verifyExpiration(refreshToken);
+        
+        User user = refreshToken.getUser();
+        UserDto userDto = EntityMapper.INSTANCE.convertToUserDto(user);
+        
+        String role = userDto.getRole() != null ? userDto.getRole() : "STUDENT";
+        String accessToken = jwtGeneratorService.generateToken(userDto.getEmail(), role, userDto.getId(), userDto.getTenantId());
+        
+        // Optionally rotate refresh token
+        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
+        
+        return new TokenResponse(accessToken, newRefreshToken.getToken(), "Bearer", 86400L);
+    }
         //        UserProfile userProfile = userProfileRepository.findByEmail(payload.getEmail()).orElseThrow(UserNotFoundException::new);
 //
         //        boolean matches = bCryptPasswordEncoder.matches(payload.getPassword(), userProfile.getPassword());

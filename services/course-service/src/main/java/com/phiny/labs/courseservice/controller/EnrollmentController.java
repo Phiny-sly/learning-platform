@@ -7,6 +7,7 @@ import com.phiny.labs.courseservice.service.EnrollmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class EnrollmentController {
 
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("isAuthenticated()")
     EnrollmentDTO create(
             @RequestBody CreateEnrollmentDTO payload,
             @RequestParam(required = true) UUID course
@@ -30,6 +32,7 @@ public class EnrollmentController {
 
     @GetMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("isAuthenticated()")
     List<EnrollmentDTO> read(
             @RequestParam(required = false) UUID course,
             @RequestParam(defaultValue = "0") int page,
@@ -39,18 +42,21 @@ public class EnrollmentController {
 
     @GetMapping(value = {"/{id}", "/{id}/"})
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("isAuthenticated()")
     EnrollmentDTO readById(@PathVariable("id") UUID id){
         return enrollmentService.readById(id);
     }
 
     @PatchMapping(value = {"/{id}", "/{id}/"})
     @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('INSTRUCTOR')")
     EnrollmentDTO updateById(@PathVariable("id") UUID id, @RequestBody UpdateEnrollmentDTO payload){
         return enrollmentService.updateById(id, payload);
     }
 
     @DeleteMapping(value = {"/{id}", "/{id}/"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('ADMIN')")
     void removeById(@PathVariable("id") UUID id){
         enrollmentService.deleteById(id);
     }

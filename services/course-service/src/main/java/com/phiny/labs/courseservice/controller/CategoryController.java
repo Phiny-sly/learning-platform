@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,12 +26,14 @@ public class CategoryController {
 
     @PostMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('ADMIN')")
     CategoryDTO create(@Valid @RequestBody CreateCategoryDTO payload){
         return categoryService.create(payload);
     }
 
     @GetMapping(value = {"", "/"})
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("isAuthenticated()")
     List<CategoryListDTO> read(
             @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "0") int page,
@@ -40,30 +43,35 @@ public class CategoryController {
 
     @GetMapping(value = {"/{id}", "/{id}/"})
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("isAuthenticated()")
     CategoryDTO readById(@PathVariable("id") UUID id){
         return categoryService.readById(id);
     }
 
     @PatchMapping(value = {"/{id}", "/{id}/"})
     @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAuthority('ADMIN')")
     CategoryDTO updateById(@PathVariable("id") UUID id, @RequestBody UpdateCategoryDTO payload){
         return categoryService.updateById(id, payload);
     }
 
     @PutMapping(value = {"{id}/courses", "/{id}/courses/"})
     @ResponseStatus(HttpStatus.ACCEPTED)
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('INSTRUCTOR')")
     void addCategoryCourses(@PathVariable("id") UUID id, @RequestBody List<UUID> courseIds){
         categoryService.addCategoryCourses(id, courseIds);
     }
 
     @DeleteMapping(value = {"{id}/courses", "/{id}/courses/"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('INSTRUCTOR')")
     void deleteCategoryCourses(@PathVariable("id") UUID id, @RequestBody List<UUID> courseIds){
         categoryService.removeCategoryCourses(id, courseIds);
     }
 
     @DeleteMapping(value = {"/{id}", "/{id}/"})
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('ADMIN')")
     void removeById(@PathVariable("id") UUID id){
         categoryService.deleteById(id);
     }

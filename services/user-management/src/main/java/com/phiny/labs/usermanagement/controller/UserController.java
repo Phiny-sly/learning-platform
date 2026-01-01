@@ -1,7 +1,9 @@
 package com.phiny.labs.usermanagement.controller;
 
+import com.phiny.labs.usermanagement.dto.TokenResponse;
 import com.phiny.labs.usermanagement.dto.UserDto;
 import com.phiny.labs.usermanagement.payload.LoginPayload;
+import com.phiny.labs.usermanagement.payload.RefreshTokenPayload;
 import com.phiny.labs.usermanagement.payload.PasswordResetPayload;
 import com.phiny.labs.usermanagement.payload.PasswordResetRequestPayload;
 import com.phiny.labs.usermanagement.payload.UserPayload;
@@ -30,8 +32,13 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody LoginPayload loginPayload) {
-        return new ResponseEntity<>(userService.generateToken(loginPayload), HttpStatus.ACCEPTED);
+    public ResponseEntity<TokenResponse> loginUser(@RequestBody LoginPayload loginPayload) {
+        return new ResponseEntity<>(userService.login(loginPayload), HttpStatus.ACCEPTED);
+    }
+
+    @PostMapping("/token/refresh")
+    public ResponseEntity<TokenResponse> refreshToken(@RequestBody RefreshTokenPayload payload) {
+        return new ResponseEntity<>(userService.refreshToken(payload.getRefreshToken()), HttpStatus.OK);
     }
 
     @GetMapping("/details/{id}")

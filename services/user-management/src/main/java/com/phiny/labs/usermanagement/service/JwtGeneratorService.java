@@ -25,12 +25,30 @@ public class JwtGeneratorService {
         return createToken(claims, email);
     }
 
+    public String generateToken(String email, String role, Long userId, Long tenantId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        claims.put("userId", userId);
+        claims.put("tenantId", tenantId);
+        return createToken(claims, email);
+    }
+
     private String createToken(Map<String, Object> claims, String email) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(email)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 86400))
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 24 hours in milliseconds
+                .signWith(getSignKey()).compact();
+    }
+
+    public String generateRefreshToken(String email) {
+        Map<String, Object> claims = new HashMap<>();
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(email)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 604800000)) // 7 days in milliseconds
                 .signWith(getSignKey()).compact();
     }
 

@@ -1,5 +1,6 @@
 package com.phiny.labs.usermanagement.service;
 
+import com.phiny.labs.usermanagement.dto.TokenResponse;
 import com.phiny.labs.usermanagement.dto.UserDto;
 import com.phiny.labs.usermanagement.payload.LoginPayload;
 import com.phiny.labs.usermanagement.payload.PasswordResetPayload;
@@ -20,6 +21,10 @@ public interface UserService {
     UserDto updateUserRole(UserRolePayload userDto);
 
     String generateToken(LoginPayload payload);
+    
+    TokenResponse login(LoginPayload payload);
+    
+    TokenResponse refreshToken(String refreshToken);
 
     UserDto getUserByEmail(String email);
 

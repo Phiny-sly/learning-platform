@@ -11,6 +11,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +32,7 @@ public class MultimediaController {
     private CourseServiceClient courseServiceClient;
 
     @PostMapping("/upload")
+    @PreAuthorize("hasAuthority('INSTRUCTOR') or hasAuthority('ADMIN')")
     public ResponseEntity<MultimediaDto> uploadFile(
             @RequestParam("title") String title,
             @RequestParam("type") String type,
@@ -72,6 +74,7 @@ public class MultimediaController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<MultimediaDto>> getAllMultimedia() {
         List<MultimediaDto> dtos = multimediaRepository.findAll().stream()
                 .map(this::convertToDto)
@@ -80,6 +83,7 @@ public class MultimediaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MultimediaDto> getMultimediaById(@PathVariable Long id) {
         return multimediaRepository.findById(id)
                 .map(this::convertToDto)
@@ -127,6 +131,7 @@ public class MultimediaController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('INSTRUCTOR') or hasAuthority('ADMIN')")
     public void removeFile(@PathVariable Long id) {
         multimediaRepository.findById(id).ifPresent(multimedia -> {
             fileService.deleteFile(multimedia.getUrl());
