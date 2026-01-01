@@ -1,5 +1,6 @@
 package com.phiny.labs.usermanagement.controller;
 
+import com.phiny.labs.common.security.SecurityUtils;
 import com.phiny.labs.usermanagement.dto.TokenResponse;
 import com.phiny.labs.usermanagement.dto.UserDto;
 import com.phiny.labs.usermanagement.payload.LoginPayload;
@@ -10,6 +11,7 @@ import com.phiny.labs.usermanagement.payload.UserPayload;
 import com.phiny.labs.usermanagement.payload.UserProfilePayload;
 import com.phiny.labs.usermanagement.payload.UserRolePayload;
 import com.phiny.labs.usermanagement.service.UserService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -65,20 +67,15 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers(pageable));
     }
 
-    @PutMapping("/details-change/{id}")
-    public ResponseEntity<UserDto> updateUserDetails(@PathVariable("id") long userId, @RequestBody UserProfilePayload userProfilePayload) {
-        // Security check is done in service layer
-        return new ResponseEntity<>(userService.updateUserDetails(userId, userProfilePayload), HttpStatus.ACCEPTED);
-    }
-    
-    @GetMapping("/me")
-    public ResponseEntity<UserDto> getCurrentUser() {
-        // Get current user from security context
-        Long currentUserId = com.phiny.labs.common.security.SecurityUtils.getCurrentUserId();
+    @PutMapping("/details-change")
+    public ResponseEntity<UserDto> updateUserDetails(@RequestBody UserProfilePayload userProfilePayload) {
+        // Get current user from security context - no ID needed
+        Long currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-        return ResponseEntity.ok(userService.getUserById(currentUserId));
+        // Security check is done in service layer - users can only update their own details
+        return new ResponseEntity<>(userService.updateUserDetails(currentUserId, userProfilePayload), HttpStatus.ACCEPTED);
     }
 
     @PutMapping("/role-change")

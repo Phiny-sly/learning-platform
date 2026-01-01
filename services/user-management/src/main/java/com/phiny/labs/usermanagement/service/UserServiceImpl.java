@@ -190,17 +190,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         
         return new TokenResponse(accessToken, newRefreshToken.getToken(), "Bearer", 86400L);
     }
-        //        UserProfile userProfile = userProfileRepository.findByEmail(payload.getEmail()).orElseThrow(UserNotFoundException::new);
-//
-        //        boolean matches = bCryptPasswordEncoder.matches(payload.getPassword(), userProfile.getPassword());
-//        if (!matches) throw new UserNotFoundException();
-//        Optional<User> user = userRepository.findAll().stream().filter(a -> a.getUserProfile().getEmail().matches(userProfile.getEmail())).findFirst();
-//        User result = null;
-//        if (user.isPresent()) {
-//            result = user.get();
-//        }
-//        return EntityMapper.INSTANCE.convertToUserDto(result);
-    }
 
     @Override
     public UserDto getUserByEmail(String email) {
@@ -252,10 +241,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         passwordResetCode.setUser(user);
         passwordResetCode.setExpirationDate(LocalDateTime.now().plusHours(1)); // 1 hour expiry
         passwordResetCodeRepository.save(passwordResetCode);
-
-        // In a real application, send email with reset code
-        // For now, we'll just log it (in production, integrate with email service)
-        System.out.println("Password reset code for " + payload.getEmail() + ": " + resetCode);
     }
 
     @Override
