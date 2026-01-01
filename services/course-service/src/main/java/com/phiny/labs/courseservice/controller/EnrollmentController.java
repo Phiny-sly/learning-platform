@@ -24,9 +24,14 @@ public class EnrollmentController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("isAuthenticated()")
     EnrollmentDTO create(
-            @RequestBody CreateEnrollmentDTO payload,
+            @RequestBody(required = false) CreateEnrollmentDTO payload,
             @RequestParam(required = true) UUID course
     ){
+        // If payload is null, create empty DTO (studentId will be auto-set from security context)
+        if (payload == null) {
+            payload = new CreateEnrollmentDTO();
+        }
+        // Security check is done in service layer
         return enrollmentService.create(course, payload);
     }
 

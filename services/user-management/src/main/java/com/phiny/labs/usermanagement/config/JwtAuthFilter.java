@@ -39,7 +39,29 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDto userDetails = userService.getUserByEmail(username);
             if (Boolean.TRUE.equals(jwtService.validateToken(token, userDetails))) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getGrantedAuthorities());
+                // Extract user ID from token for security context
+                Long userId = jwtService.extractClaim(token, claims -> {
+                    Object userIdObj = claims.get("userId");
+                    if (userIdObj instanceof Integer) {
+                        return ((Integer) userIdObj).longValue();
+                    } else if (userIdObj instanceof Long) {
+                        return (Long) userIdObj;
+                    }
+                    return userDetails.getId();
+                });
+                
+                // Create UserPrincipal with all user info
+                com.phiny.labs.common.security.UserPrincipal principal = 
+                    new com.phiny.labs.common.security.UserPrincipal(
+                        userDetails.getEmail(),
+                        userId != null ? userId : userDetails.getId(),
+                        userDetails.getTenantId(),
+                        userDetails.getRole() != null ? userDetails.getRole() : "STUDENT"
+                    );
+                
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    principal, null, userDetails.getGrantedAuthorities()
+                );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }

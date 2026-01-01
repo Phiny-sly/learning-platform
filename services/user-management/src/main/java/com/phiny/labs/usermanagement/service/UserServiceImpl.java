@@ -1,5 +1,6 @@
 package com.phiny.labs.usermanagement.service;
 
+import com.phiny.labs.common.security.SecurityUtils;
 import com.phiny.labs.usermanagement.config.EntityMapper;
 import com.phiny.labs.usermanagement.dto.TokenResponse;
 import com.phiny.labs.usermanagement.dto.UserDto;
@@ -7,6 +8,7 @@ import com.phiny.labs.usermanagement.entity.PasswordResetCode;
 import com.phiny.labs.usermanagement.entity.RefreshToken;
 import com.phiny.labs.usermanagement.entity.User;
 import com.phiny.labs.usermanagement.entity.UserProfile;
+import com.phiny.labs.usermanagement.exception.AccessDeniedException;
 import com.phiny.labs.usermanagement.exception.EmailAlreadyExistsException;
 import com.phiny.labs.usermanagement.exception.RoleAlreadyExistsException;
 import com.phiny.labs.usermanagement.exception.UserNotFoundException;
@@ -83,6 +85,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional
     public UserDto updateUserDetails(long userId, UserProfilePayload userProfilePayload) {
+        // Security check: Ensure user can only update their own details (unless admin)
+        if (!SecurityUtils.canAccess(userId)) {
+            throw new AccessDeniedException("You can only update your own user details");
+        }
+        
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         userProfileRepository.findById(user.getUserProfile().getId()).ifPresent(userprofile -> {
             EntityMapper.INSTANCE.updateUserProfile(userprofile, userProfilePayload);
@@ -96,6 +103,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public UserDto getUserById(long userId) {
+        // Security check: Ensure user can only view their own details (unless admin)
+        if (!SecurityUtils.canAccess(userId)) {
+            throw new AccessDeniedException("You can only view your own user details");
+        }
+        
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
         return EntityMapper.INSTANCE.convertToUserDto(user);
     }
@@ -196,6 +208,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         User result = null;
         if (user.isPresent()) {
             result = user.get();
+            
+            // Security check: Ensure user can only view their own details (unless admin)
+            if (!SecurityUtils.canAccess(result.getId())) {
+                throw new AccessDeniedException("You can only view your own user details");
+            }
         }
         return EntityMapper.INSTANCE.convertToUserDto(result);
     }

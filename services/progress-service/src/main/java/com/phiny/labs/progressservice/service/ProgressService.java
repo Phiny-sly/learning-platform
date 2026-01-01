@@ -1,7 +1,9 @@
 package com.phiny.labs.progressservice.service;
 
+import com.phiny.labs.common.security.SecurityUtils;
 import com.phiny.labs.progressservice.dto.CourseProgressDTO;
 import com.phiny.labs.progressservice.dto.UpdateProgressDTO;
+import com.phiny.labs.progressservice.exception.AccessDeniedException;
 import com.phiny.labs.progressservice.model.CourseProgress;
 import com.phiny.labs.progressservice.model.LessonProgress;
 import com.phiny.labs.progressservice.model.LessonStatus;
@@ -36,6 +38,19 @@ public class ProgressService {
 
     @Transactional
     public CourseProgressDTO updateLessonProgress(UUID courseId, UUID studentId, UpdateProgressDTO dto) {
+        // Security check: Ensure user can only update their own progress (unless admin/instructor)
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        
+        UUID currentUserUUID = new UUID(0, currentUserId);
+        if (!SecurityUtils.isAdmin() && !SecurityUtils.hasAuthority("INSTRUCTOR")) {
+            if (!studentId.equals(currentUserUUID)) {
+                throw new AccessDeniedException("You can only update your own progress");
+            }
+        }
+        
         // Update or create lesson progress
         LessonProgress lessonProgress = lessonProgressRepository
                 .findByLessonIdAndStudentId(dto.getLessonId(), studentId)
@@ -132,6 +147,19 @@ public class ProgressService {
     }
 
     public CourseProgressDTO getCourseProgress(UUID courseId, UUID studentId) {
+        // Security check: Ensure user can only view their own progress (unless admin/instructor)
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            throw new AccessDeniedException("Authentication required");
+        }
+        
+        UUID currentUserUUID = new UUID(0, currentUserId);
+        if (!SecurityUtils.isAdmin() && !SecurityUtils.hasAuthority("INSTRUCTOR")) {
+            if (!studentId.equals(currentUserUUID)) {
+                throw new AccessDeniedException("You can only view your own progress");
+            }
+        }
+        
         CourseProgress courseProgress = courseProgressRepository
                 .findByCourseIdAndStudentId(courseId, studentId)
                 .orElse(null);

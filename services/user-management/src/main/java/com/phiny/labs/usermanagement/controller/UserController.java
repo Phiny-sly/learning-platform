@@ -67,7 +67,18 @@ public class UserController {
 
     @PutMapping("/details-change/{id}")
     public ResponseEntity<UserDto> updateUserDetails(@PathVariable("id") long userId, @RequestBody UserProfilePayload userProfilePayload) {
+        // Security check is done in service layer
         return new ResponseEntity<>(userService.updateUserDetails(userId, userProfilePayload), HttpStatus.ACCEPTED);
+    }
+    
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUser() {
+        // Get current user from security context
+        Long currentUserId = com.phiny.labs.common.security.SecurityUtils.getCurrentUserId();
+        if (currentUserId == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        return ResponseEntity.ok(userService.getUserById(currentUserId));
     }
 
     @PutMapping("/role-change")
