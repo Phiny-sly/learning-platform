@@ -7,6 +7,8 @@ import com.phiny.labs.notificationservice.model.NotificationStatus;
 import com.phiny.labs.notificationservice.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mail.SimpleMailMessage;
@@ -21,6 +23,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
+
+    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
     private final ModelMapper modelMapper;
@@ -112,7 +116,7 @@ public class NotificationService {
                 sendNotification(notification);
             } catch (Exception e) {
                 // Log error and continue with next notification
-                System.err.println("Failed to process notification " + notification.getId() + ": " + e.getMessage());
+                logger.error("Failed to process notification {}: {}", notification.getId(), e.getMessage(), e);
             }
         }
     }

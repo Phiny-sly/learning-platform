@@ -1,15 +1,18 @@
 package com.phiny.labs.common.audit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuditService {
     
+    private static final Logger logger = LoggerFactory.getLogger(AuditService.class);
+    
     public void log(AuditLog auditLog) {
         // In production, this should write to a database or logging service
         // For now, we'll just log to console
-        System.out.println(String.format(
-            "[AUDIT] %s | User: %s (%s) | Action: %s | Resource: %s/%s | IP: %s | Status: %s | Time: %s",
+        logger.info("[AUDIT] {} | User: {} ({}) | Action: {} | Resource: {}/{} | IP: {} | Status: {} | Time: {}",
             auditLog.getTimestamp(),
             auditLog.getUserId(),
             auditLog.getUserEmail(),
@@ -19,10 +22,10 @@ public class AuditService {
             auditLog.getIpAddress(),
             auditLog.getStatus(),
             auditLog.getTimestamp()
-        ));
+        );
         
         if (auditLog.getErrorMessage() != null) {
-            System.err.println(String.format("[AUDIT ERROR] %s", auditLog.getErrorMessage()));
+            logger.error("[AUDIT ERROR] {}", auditLog.getErrorMessage());
         }
     }
     

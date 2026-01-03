@@ -16,6 +16,8 @@ import com.phiny.labs.courseservice.repository.CourseRepository;
 import com.phiny.labs.courseservice.repository.EnrollmentRepository;
 import com.phiny.labs.courseservice.util.Util;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +29,8 @@ import java.util.UUID;
 
 @Service
 public class EnrollmentService {
+
+    private static final Logger logger = LoggerFactory.getLogger(EnrollmentService.class);
 
     @Autowired private EnrollmentRepository enrollmentRepository;
     @Autowired private CourseRepository courseRepository;
@@ -80,7 +84,7 @@ public class EnrollmentService {
                     notificationServiceClient.createNotification(notificationRequest);
                 }
             } catch (Exception e) {
-                System.err.println("Failed to send enrollment notification: " + e.getMessage());
+                logger.error("Failed to send enrollment notification: {}", e.getMessage(), e);
             }
         }
         

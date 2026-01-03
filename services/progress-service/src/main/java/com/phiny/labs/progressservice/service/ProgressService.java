@@ -14,6 +14,8 @@ import com.phiny.labs.progressservice.repository.CourseProgressRepository;
 import com.phiny.labs.progressservice.repository.LessonProgressRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ProgressService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProgressService.class);
 
     private final CourseProgressRepository courseProgressRepository;
     private final LessonProgressRepository lessonProgressRepository;
@@ -136,7 +140,7 @@ public class ProgressService {
                         notification.setType("IN_APP");
                         notificationServiceClient.createNotification(notification);
                     } catch (Exception e) {
-                        System.err.println("Failed to send completion notification: " + e.getMessage());
+                        logger.error("Failed to send completion notification: {}", e.getMessage(), e);
                     }
                 }
             }

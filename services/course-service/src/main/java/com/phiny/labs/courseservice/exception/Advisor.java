@@ -2,6 +2,8 @@ package com.phiny.labs.courseservice.exception;
 
 import jakarta.ws.rs.BadRequestException;
 import org.modelmapper.MappingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -15,6 +17,8 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @ControllerAdvice
 @ResponseBody
 public class Advisor {
+
+    private static final Logger logger = LoggerFactory.getLogger(Advisor.class);
 
     @ExceptionHandler(value = {NotFoundError.class})
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
@@ -31,7 +35,7 @@ public class Advisor {
     @ExceptionHandler(value = {MappingException.class})
     @ResponseStatus(value = HttpStatus.UNPROCESSABLE_ENTITY)
     public ErrorMessage mappingErrorHandler(RuntimeException e, WebRequest wr){
-        System.out.println(e.getMessage());
+        logger.warn("Mapping error: {}", e.getMessage());
         return new ErrorMessage(HttpStatus.UNPROCESSABLE_ENTITY.value(), "unacceptable request body");
     }
 
