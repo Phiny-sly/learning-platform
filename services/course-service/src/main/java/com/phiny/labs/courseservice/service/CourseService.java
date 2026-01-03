@@ -73,7 +73,7 @@ public class CourseService {
                     notificationRequest.setEmail(user.getEmail());
                     notificationRequest.setTitle("New Course Created");
                     notificationRequest.setMessage("Your course '" + course.getTitle() + "' has been created successfully.");
-                    notificationRequest.setType("COURSE_CREATED");
+                    notificationRequest.setType("IN_APP"); // Use valid NotificationType enum value
                     notificationServiceClient.createNotification(notificationRequest);
                 }
             } catch (Exception e) {

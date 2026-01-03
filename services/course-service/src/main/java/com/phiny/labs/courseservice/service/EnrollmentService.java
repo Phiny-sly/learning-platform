@@ -80,7 +80,7 @@ public class EnrollmentService {
                     notificationRequest.setEmail(user.getEmail());
                     notificationRequest.setTitle("Course Enrollment");
                     notificationRequest.setMessage("You have successfully enrolled in course '" + enrollment.getCourse().getTitle() + "'.");
-                    notificationRequest.setType("COURSE_ENROLLMENT");
+                    notificationRequest.setType("IN_APP"); // Use valid NotificationType enum value
                     notificationServiceClient.createNotification(notificationRequest);
                 }
             } catch (Exception e) {

@@ -4,6 +4,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.UUID;
+
 @FeignClient(name = "notification-service", path = "/api/notifications")
 public interface NotificationServiceClient {
 
@@ -14,8 +16,9 @@ public interface NotificationServiceClient {
         private Long userId;
         private String title;
         private String message;
-        private String type;
+        private String type; // Will be serialized as enum: EMAIL, SMS, PUSH, or IN_APP
         private String email;
+        private String phoneNumber;
 
         // Getters and setters
         public Long getUserId() { return userId; }
@@ -28,15 +31,17 @@ public interface NotificationServiceClient {
         public void setType(String type) { this.type = type; }
         public String getEmail() { return email; }
         public void setEmail(String email) { this.email = email; }
+        public String getPhoneNumber() { return phoneNumber; }
+        public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     }
 
     class NotificationResponse {
-        private String id;
-        private String status;
+        private UUID id;
+        private String status; // Will be deserialized from NotificationStatus enum
 
         // Getters and setters
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
+        public UUID getId() { return id; }
+        public void setId(UUID id) { this.id = id; }
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
     }
