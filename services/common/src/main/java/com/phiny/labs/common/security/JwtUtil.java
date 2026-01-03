@@ -1,5 +1,6 @@
 package com.phiny.labs.common.security;
 
+import com.phiny.labs.common.exception.TokenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -44,7 +45,7 @@ public class JwtUtil {
                     .parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {
-            throw new RuntimeException("Invalid JWT token", e);
+            throw TokenException.invalid("JWT");
         }
     }
 

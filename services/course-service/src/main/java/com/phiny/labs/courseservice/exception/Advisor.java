@@ -1,5 +1,6 @@
 package com.phiny.labs.courseservice.exception;
 
+import com.phiny.labs.common.exception.*;
 import jakarta.ws.rs.BadRequestException;
 import org.modelmapper.MappingException;
 import org.slf4j.Logger;
@@ -45,10 +46,38 @@ public class Advisor {
         return new ErrorMessage(HttpStatus.UNAUTHORIZED.value(), e.getMessage());
     }
 
-    @ExceptionHandler(value = {InternalServerError.class, NullPointerException.class})
+    @ExceptionHandler(value = {InternalServerError.class, ServiceException.class})
     @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorMessage jsonProcessingHandler(RuntimeException e, WebRequest wr){
+    public ErrorMessage serviceErrorHandler(RuntimeException e, WebRequest wr){
+        logger.error("Service error: {}", e.getMessage(), e);
         return new ErrorMessage(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage());
+    }
+    
+    @ExceptionHandler(value = {ExternalServiceException.class})
+    @ResponseStatus(value = HttpStatus.BAD_GATEWAY)
+    public ErrorMessage externalServiceErrorHandler(ExternalServiceException e, WebRequest wr){
+        logger.error("External service error [{}]: {}", e.getServiceName(), e.getMessage(), e);
+        return new ErrorMessage(HttpStatus.BAD_GATEWAY.value(), e.getMessage());
+    }
+    
+    @ExceptionHandler(value = {ValidationException.class})
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
+    public ErrorMessage validationErrorHandler(ValidationException e, WebRequest wr){
+        logger.warn("Validation error: {}", e.getMessage());
+        return new ErrorMessage(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+    }
+    
+    @ExceptionHandler(value = {ResourceNotFoundException.class})
+    @ResponseStatus(value = HttpStatus.NOT_FOUND)
+    public ErrorMessage resourceNotFoundHandler(ResourceNotFoundException e, WebRequest wr){
+        return new ErrorMessage(HttpStatus.NOT_FOUND.value(), e.getMessage());
+    }
+    
+    @ExceptionHandler(value = {NullPointerException.class})
+    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorMessage nullPointerHandler(NullPointerException e, WebRequest wr){
+        logger.error("Null pointer exception: {}", e.getMessage(), e);
+        return new ErrorMessage(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An internal error occurred");
     }
 
     @ExceptionHandler(value = {DataIntegrityViolationException.class})

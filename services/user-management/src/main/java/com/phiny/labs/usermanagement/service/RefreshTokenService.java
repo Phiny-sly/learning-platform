@@ -1,5 +1,6 @@
 package com.phiny.labs.usermanagement.service;
 
+import com.phiny.labs.common.exception.TokenException;
 import com.phiny.labs.usermanagement.entity.RefreshToken;
 import com.phiny.labs.usermanagement.entity.User;
 import com.phiny.labs.usermanagement.exception.UserNotFoundException;
@@ -49,11 +50,11 @@ public class RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiresAt().isBefore(LocalDateTime.now())) {
             refreshTokenRepository.delete(token);
-            throw new RuntimeException("Refresh token was expired. Please make a new signin request");
+            throw TokenException.expired("Refresh");
         }
         if (Boolean.TRUE.equals(token.getRevoked())) {
             refreshTokenRepository.delete(token);
-            throw new RuntimeException("Refresh token was revoked. Please make a new signin request");
+            throw TokenException.revoked("Refresh");
         }
         return token;
     }

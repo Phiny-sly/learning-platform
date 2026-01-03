@@ -1,5 +1,7 @@
 package com.phiny.labs.progressservice.service;
 
+import com.phiny.labs.common.exception.ExternalServiceException;
+import com.phiny.labs.common.exception.ResourceNotFoundException;
 import com.phiny.labs.common.security.SecurityUtils;
 import com.phiny.labs.progressservice.dto.CourseProgressDTO;
 import com.phiny.labs.progressservice.dto.UpdateProgressDTO;
@@ -93,10 +95,12 @@ public class ProgressService {
             try {
                 CourseServiceClient.CourseDto course = courseServiceClient.getCourseById(courseId);
                 if (course == null) {
-                    throw new RuntimeException("Course not found with id: " + courseId);
+                    throw new ResourceNotFoundException("Course", courseId);
                 }
+            } catch (ResourceNotFoundException e) {
+                throw e;
             } catch (Exception e) {
-                throw new RuntimeException("Course validation failed: " + e.getMessage());
+                throw new ExternalServiceException("Course Service", "Failed to validate course", e);
             }
         }
         
@@ -141,6 +145,7 @@ public class ProgressService {
                         notificationServiceClient.createNotification(notification);
                     } catch (Exception e) {
                         logger.error("Failed to send completion notification: {}", e.getMessage(), e);
+                        // Don't fail the progress update if notification fails
                     }
                 }
             }

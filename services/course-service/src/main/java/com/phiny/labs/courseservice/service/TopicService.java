@@ -2,11 +2,11 @@ package com.phiny.labs.courseservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.phiny.labs.common.exception.ServiceException;
 import com.phiny.labs.courseservice.dto.topic.CreateTopicDTO;
 import com.phiny.labs.courseservice.dto.topic.TopicDTO;
 import com.phiny.labs.courseservice.dto.topic.TopicListDTO;
 import com.phiny.labs.courseservice.dto.topic.UpdateTopicDTO;
-import com.phiny.labs.courseservice.exception.InternalServerError;
 import com.phiny.labs.courseservice.exception.NotFoundError;
 import com.phiny.labs.courseservice.model.Topic;
 import com.phiny.labs.courseservice.repository.CourseRepository;
@@ -63,8 +63,11 @@ public class TopicService {
 
         Topic topic = topicRepository.findById(id).orElseThrow(()-> new NotFoundError(id));
 
-        try {objectMapper.readerForUpdating(topic).readValue(objectMapper.writeValueAsString(payload));}
-        catch (JsonProcessingException e) { throw new InternalServerError("update failed, something went wrong -> " + e.getMessage());}
+        try {
+            objectMapper.readerForUpdating(topic).readValue(objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            throw new ServiceException("Failed to update topic", e);
+        }
 
         topicRepository.save(topic);
         TopicDTO dto = modelMapper.map(topic, TopicDTO.class);

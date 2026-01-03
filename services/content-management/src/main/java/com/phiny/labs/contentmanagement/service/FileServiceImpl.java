@@ -4,6 +4,8 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import com.phiny.labs.common.exception.ExternalServiceException;
+import com.phiny.labs.common.exception.ServiceException;
 import com.phiny.labs.contentmanagement.config.EntityMapper;
 import com.phiny.labs.contentmanagement.dto.MultimediaDto;
 import com.phiny.labs.contentmanagement.entity.MediaType;
@@ -56,10 +58,11 @@ public class FileServiceImpl implements IFileService {
             return fileName;
         } catch (IOException e) {
             log.error("Error {} occurred while deleting the file", e.getLocalizedMessage());
+            throw new ServiceException("Failed to delete temporary file", e);
         } catch (AmazonServiceException e) {
             log.error("Error {} occurred while uploading the file", e.getLocalizedMessage());
+            throw new ExternalServiceException("S3", "Failed to upload file to S3", e);
         }
-        return null;
     }
 
     private File convertMultiPartFileToFile(final MultipartFile multipartFile) {
@@ -68,6 +71,7 @@ public class FileServiceImpl implements IFileService {
             outputStream.write(multipartFile.getBytes());
         } catch (IOException e) {
             log.error("Error {} occurred while converting the multipart file", e.getLocalizedMessage());
+            throw new ServiceException("Failed to convert multipart file", e);
         }
         return file;
     }

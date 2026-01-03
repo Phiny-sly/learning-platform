@@ -2,10 +2,10 @@ package com.phiny.labs.tenantservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.phiny.labs.common.exception.ServiceException;
 import com.phiny.labs.tenantservice.dto.CreateTenantDTO;
 import com.phiny.labs.tenantservice.dto.TenantDTO;
 import com.phiny.labs.tenantservice.dto.UpdateTenantDTO;
-import com.phiny.labs.tenantservice.exception.InternalServerError;
 import com.phiny.labs.tenantservice.exception.NotFoundError;
 import com.phiny.labs.tenantservice.model.Tenant;
 import com.phiny.labs.tenantservice.repository.TenantRepository;
@@ -45,8 +45,11 @@ public class TenantService {
 
         Tenant tenant = tenantRepository.findById(id).orElseThrow(()-> new NotFoundError(id));
 
-        try {objectMapper.readerForUpdating(tenant).readValue(objectMapper.writeValueAsString(payload));}
-        catch (JsonProcessingException e) { throw new InternalServerError("update failed, something went wrong -> " + e.getMessage());}
+        try {
+            objectMapper.readerForUpdating(tenant).readValue(objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            throw new ServiceException("Failed to update tenant", e);
+        }
 
         return modelMapper.map(tenant, TenantDTO.class);
 

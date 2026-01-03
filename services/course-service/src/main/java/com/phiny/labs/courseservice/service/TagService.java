@@ -2,11 +2,11 @@ package com.phiny.labs.courseservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.phiny.labs.common.exception.ServiceException;
 import com.phiny.labs.courseservice.dto.tag.CreateTagDTO;
 import com.phiny.labs.courseservice.dto.tag.TagDTO;
 import com.phiny.labs.courseservice.dto.tag.TagListDTO;
 import com.phiny.labs.courseservice.dto.tag.UpdateTagDTO;
-import com.phiny.labs.courseservice.exception.InternalServerError;
 import com.phiny.labs.courseservice.exception.NotFoundError;
 import com.phiny.labs.courseservice.model.Tag;
 import com.phiny.labs.courseservice.repository.TagRepository;
@@ -48,8 +48,11 @@ public class TagService {
 
         Tag tag = tagRepository.findById(id).orElseThrow(()-> new NotFoundError(id));
 
-        try {objectMapper.readerForUpdating(tag).readValue(objectMapper.writeValueAsString(payload));}
-        catch (JsonProcessingException e) { throw new InternalServerError("update failed, something went wrong -> " + e.getMessage());}
+        try {
+            objectMapper.readerForUpdating(tag).readValue(objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            throw new ServiceException("Failed to update tag", e);
+        }
 
         tagRepository.save(tag);
         return modelMapper.map(tag, TagDTO.class);

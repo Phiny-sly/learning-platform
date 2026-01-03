@@ -1,5 +1,6 @@
 package com.phiny.labs.progressservice.controller;
 
+import com.phiny.labs.common.exception.AuthenticationException;
 import com.phiny.labs.common.security.SecurityUtils;
 import com.phiny.labs.progressservice.dto.CourseProgressDTO;
 import com.phiny.labs.progressservice.dto.UpdateProgressDTO;
@@ -48,7 +49,7 @@ public class ProgressController {
         // Auto-use current user's ID
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
-            throw new RuntimeException("Authentication required");
+            throw new AuthenticationException("Authentication required");
         }
         UUID currentUserUUID = new UUID(0, currentUserId);
         return progressService.updateLessonProgress(courseId, currentUserUUID, dto);
@@ -61,7 +62,7 @@ public class ProgressController {
         // Auto-use current user's ID
         Long currentUserId = SecurityUtils.getCurrentUserId();
         if (currentUserId == null) {
-            throw new RuntimeException("Authentication required");
+            throw new AuthenticationException("Authentication required");
         }
         UUID currentUserUUID = new UUID(0, currentUserId);
         return progressService.getCourseProgress(courseId, currentUserUUID);

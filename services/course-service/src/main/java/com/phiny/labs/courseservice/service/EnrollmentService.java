@@ -2,12 +2,13 @@ package com.phiny.labs.courseservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.phiny.labs.common.exception.ExternalServiceException;
+import com.phiny.labs.common.exception.ServiceException;
 import com.phiny.labs.common.security.SecurityUtils;
 import com.phiny.labs.courseservice.dto.enrollment.CreateEnrollmentDTO;
 import com.phiny.labs.courseservice.dto.enrollment.EnrollmentDTO;
 import com.phiny.labs.courseservice.dto.enrollment.UpdateEnrollmentDTO;
 import com.phiny.labs.courseservice.exception.AccessDeniedException;
-import com.phiny.labs.courseservice.exception.InternalServerError;
 import com.phiny.labs.courseservice.exception.NotFoundError;
 import com.phiny.labs.courseservice.model.Enrollment;
 import com.phiny.labs.courseservice.client.NotificationServiceClient;
@@ -83,8 +84,12 @@ public class EnrollmentService {
                     notificationRequest.setType("IN_APP"); // Use valid NotificationType enum value
                     notificationServiceClient.createNotification(notificationRequest);
                 }
-            } catch (Exception e) {
+            } catch (ExternalServiceException e) {
                 logger.error("Failed to send enrollment notification: {}", e.getMessage(), e);
+                // Don't fail enrollment if notification fails
+            } catch (Exception e) {
+                logger.error("Unexpected error sending enrollment notification: {}", e.getMessage(), e);
+                // Don't fail enrollment if notification fails
             }
         }
         
@@ -147,8 +152,11 @@ public class EnrollmentService {
             }
         }
 
-        try {objectMapper.readerForUpdating(enrollment).readValue(objectMapper.writeValueAsString(payload));}
-        catch (JsonProcessingException e) { throw new InternalServerError("update failed, something went wrong -> " + e.getMessage());}
+        try {
+            objectMapper.readerForUpdating(enrollment).readValue(objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            throw new ServiceException("Failed to update enrollment", e);
+        }
 
         enrollmentRepository.save(enrollment);
         EnrollmentDTO dto = modelMapper.map(enrollment, EnrollmentDTO.class);

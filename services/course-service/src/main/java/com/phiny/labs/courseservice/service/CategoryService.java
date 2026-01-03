@@ -2,11 +2,11 @@ package com.phiny.labs.courseservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.phiny.labs.common.exception.ServiceException;
 import com.phiny.labs.courseservice.dto.category.CategoryDTO;
 import com.phiny.labs.courseservice.dto.category.CategoryListDTO;
 import com.phiny.labs.courseservice.dto.category.CreateCategoryDTO;
 import com.phiny.labs.courseservice.dto.category.UpdateCategoryDTO;
-import com.phiny.labs.courseservice.exception.InternalServerError;
 import com.phiny.labs.courseservice.exception.NotFoundError;
 import com.phiny.labs.courseservice.model.Category;
 import com.phiny.labs.courseservice.model.Course;
@@ -49,8 +49,11 @@ public class CategoryService {
 
         Category category = categoryRepository.findById(id).orElseThrow(()-> new NotFoundError(id));
 
-        try {objectMapper.readerForUpdating(category).readValue(objectMapper.writeValueAsString(payload));}
-        catch (JsonProcessingException e) { throw new InternalServerError("update failed, something went wrong -> " + e.getMessage());}
+        try {
+            objectMapper.readerForUpdating(category).readValue(objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            throw new ServiceException("Failed to update category", e);
+        }
 
         categoryRepository.save(category);
         return modelMapper.map(category, CategoryDTO.class);

@@ -1,6 +1,9 @@
 package com.phiny.labs.contentmanagement.controller;
 
 import com.amazonaws.services.s3.model.S3Object;
+import com.phiny.labs.common.exception.ExternalServiceException;
+import com.phiny.labs.common.exception.ResourceNotFoundException;
+import com.phiny.labs.common.exception.ValidationException;
 import com.phiny.labs.contentmanagement.client.CourseServiceClient;
 import com.phiny.labs.contentmanagement.dto.MultimediaDto;
 import com.phiny.labs.contentmanagement.entity.Multimedia;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -45,14 +49,16 @@ public class MultimediaController {
         // Validate course exists if courseId is provided
         if (courseId != null && courseServiceClient != null) {
             try {
-                java.util.UUID courseUuid = java.util.UUID.fromString(courseId);
+                UUID courseUuid = UUID.fromString(courseId);
                 CourseServiceClient.CourseDto course = courseServiceClient.getCourseById(courseUuid);
                 if (course == null) {
-                    return ResponseEntity.badRequest().build();
+                    throw new ResourceNotFoundException("Course", courseUuid);
                 }
-            } catch (Exception e) {
-                return ResponseEntity.badRequest().build();
+            } catch (IllegalArgumentException e) {
+                throw new ValidationException("courseId", "Invalid UUID format");
             }
+            // ResourceNotFoundException and ExternalServiceException will propagate naturally
+            // Any other unexpected exceptions will be handled by the global exception handler
         }
         
         MultimediaDto dto = fileService.uploadFile(title, type, file);

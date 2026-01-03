@@ -1,5 +1,10 @@
 package com.phiny.labs.notificationservice.service;
 
+import com.phiny.labs.common.exception.ExternalServiceException;
+import com.phiny.labs.common.exception.NotificationException;
+import com.phiny.labs.common.exception.ResourceNotFoundException;
+import com.phiny.labs.common.exception.ServiceException;
+import com.phiny.labs.common.exception.ValidationException;
 import com.phiny.labs.notificationservice.dto.CreateNotificationDTO;
 import com.phiny.labs.notificationservice.dto.NotificationDTO;
 import com.phiny.labs.notificationservice.model.Notification;
@@ -48,7 +53,7 @@ public class NotificationService {
 
     public NotificationDTO getNotificationById(UUID id) {
         Notification notification = notificationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Notification", id));
         return modelMapper.map(notification, NotificationDTO.class);
     }
 
@@ -56,42 +61,44 @@ public class NotificationService {
     public void sendNotification(Notification notification) {
         try {
             switch (notification.getType()) {
-                case EMAIL:
-                    sendEmail(notification);
-                    break;
-                case SMS:
-                    sendSMS(notification);
-                    break;
-                case PUSH:
-                    sendPushNotification(notification);
-                    break;
-                case IN_APP:
+                case EMAIL -> sendEmail(notification);
+                case SMS -> sendSMS(notification);
+                case PUSH -> sendPushNotification(notification);
+                case IN_APP -> {
                     // In-app notifications are already stored
                     notification.setStatus(NotificationStatus.SENT);
                     notification.setSentAt(LocalDateTime.now());
-                    break;
+                }
             }
             notificationRepository.save(notification);
+        } catch (NotificationException e) {
+            notification.setStatus(NotificationStatus.FAILED);
+            notificationRepository.save(notification);
+            throw e;
         } catch (Exception e) {
             notification.setStatus(NotificationStatus.FAILED);
             notificationRepository.save(notification);
-            throw new RuntimeException("Failed to send notification: " + e.getMessage(), e);
+            throw new NotificationException("Failed to send notification", e);
         }
     }
 
     private void sendEmail(Notification notification) {
         if (notification.getEmail() == null || notification.getEmail().isEmpty()) {
-            throw new RuntimeException("Email address is required for email notifications");
+            throw new ValidationException("email", "Email address is required for email notifications");
         }
         
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(notification.getEmail());
-        message.setSubject(notification.getTitle());
-        message.setText(notification.getMessage());
-        
-        mailSender.send(message);
-        notification.setStatus(NotificationStatus.SENT);
-        notification.setSentAt(LocalDateTime.now());
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(notification.getEmail());
+            message.setSubject(notification.getTitle());
+            message.setText(notification.getMessage());
+            
+            mailSender.send(message);
+            notification.setStatus(NotificationStatus.SENT);
+            notification.setSentAt(LocalDateTime.now());
+        } catch (Exception e) {
+            throw new ExternalServiceException("Email Service", "Failed to send email notification", e);
+        }
     }
 
     private void sendSMS(Notification notification) {
@@ -114,9 +121,12 @@ public class NotificationService {
         for (Notification notification : pendingNotifications) {
             try {
                 sendNotification(notification);
-            } catch (Exception e) {
+            } catch (NotificationException | ExternalServiceException e) {
                 // Log error and continue with next notification
                 logger.error("Failed to process notification {}: {}", notification.getId(), e.getMessage(), e);
+            } catch (Exception e) {
+                // Log unexpected errors and continue
+                logger.error("Unexpected error processing notification {}: {}", notification.getId(), e.getMessage(), e);
             }
         }
     }

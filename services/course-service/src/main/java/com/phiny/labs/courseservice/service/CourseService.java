@@ -2,13 +2,14 @@ package com.phiny.labs.courseservice.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.phiny.labs.common.exception.ExternalServiceException;
+import com.phiny.labs.common.exception.ServiceException;
 import com.phiny.labs.common.security.SecurityUtils;
 import com.phiny.labs.courseservice.dto.course.CourseDTO;
 import com.phiny.labs.courseservice.dto.course.CourseListDTO;
 import com.phiny.labs.courseservice.dto.course.CreateCourseDTO;
 import com.phiny.labs.courseservice.dto.course.UpdateCourseDTO;
 import com.phiny.labs.courseservice.exception.AccessDeniedException;
-import com.phiny.labs.courseservice.exception.InternalServerError;
 import com.phiny.labs.courseservice.exception.NotFoundError;
 import com.phiny.labs.courseservice.model.Course;
 import com.phiny.labs.courseservice.model.Tag;
@@ -76,8 +77,12 @@ public class CourseService {
                     notificationRequest.setType("IN_APP"); // Use valid NotificationType enum value
                     notificationServiceClient.createNotification(notificationRequest);
                 }
-            } catch (Exception e) {
+            } catch (ExternalServiceException e) {
                 logger.error("Failed to send course creation notification: {}", e.getMessage(), e);
+                // Don't fail course creation if notification fails
+            } catch (Exception e) {
+                logger.error("Unexpected error sending course creation notification: {}", e.getMessage(), e);
+                // Don't fail course creation if notification fails
             }
         }
 
@@ -109,7 +114,7 @@ public class CourseService {
         try {
             objectMapper.readerForUpdating(course).readValue(objectMapper.writeValueAsString(payload));
         } catch (JsonProcessingException e) {
-            throw new InternalServerError("update failed, something went wrong -> " + e.getMessage());
+            throw new ServiceException("Failed to update course", e);
         }
         courseRepository.save(course);
         return modelMapper.map(course, CourseDTO.class);

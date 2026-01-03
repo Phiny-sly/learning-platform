@@ -255,11 +255,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .orElseThrow(() -> new UserNotFoundException(payload.getEmail()));
 
         PasswordResetCode resetCode = passwordResetCodeRepository.findByIdAndUser(payload.getCode(), user)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired reset code"));
+                .orElseThrow(() -> new com.phiny.labs.common.exception.ValidationException("Invalid or expired reset code"));
 
         if (resetCode.getExpirationDate().isBefore(LocalDateTime.now())) {
             passwordResetCodeRepository.delete(resetCode);
-            throw new RuntimeException("Reset code has expired");
+            throw new com.phiny.labs.common.exception.ValidationException("Reset code has expired");
         }
 
         // Update password
